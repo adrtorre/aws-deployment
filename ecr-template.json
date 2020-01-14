@@ -1,45 +1,13 @@
-"MyRepository": {
-    "Type":"AWS::ECR::Repository",
-    "Properties":{
-      "RepositoryName":{
-        "Ref":"AWS::StackName"
-      },
-      "RepositoryPolicyText":{
-        "Version":"2008-10-17",
-        "Statement":[
-          {
-            "Sid":"AllowPushPull",
-            "Effect":"Allow",
-            "Principal":{
-              "AWS":[
-                {
-                  "Fn::Join":[
-                    "",
-                    [
-                      "arn:aws:iam::",
-                      {
-                        "Ref":"AWS::AccountId"
-                      },
-                      ":user/",
-                      {
-                        "Ref":"IAMUsername"
-                      }
-                    ]
-                  ]
-                }
-              ]
-            },
-            "Action":[
-              "ecr:GetDownloadUrlForLayer",
-              "ecr:BatchGetImage",
-              "ecr:BatchCheckLayerAvailability",
-              "ecr:PutImage",
-              "ecr:InitiateLayerUpload",
-              "ecr:UploadLayerPart",
-              "ecr:CompleteLayerUpload"
-            ]
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    
+    "Description" : "AWS CloudFormation template for creating",
+    "Resources": {
+      "xero-ecr": {
+          "Type": "AWS::ECR::Repository",
+          "Properties": {
+            "RepositoryName": "xero-ecr"
           }
-        ]
       }
-    }
+    }   
   }
