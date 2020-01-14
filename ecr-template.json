@@ -1,4 +1,4 @@
-"MyRepository":{
+"MyRepository": {
     "Type":"AWS::ECR::Repository",
     "Properties":{
       "RepositoryName":{
