@@ -1,13 +1,13 @@
 {
-    "AWSTemplateFormatVersion" : "2010-09-09",
-    
-    "Description" : "AWS CloudFormation template for creating",
-    "Resources": {
-      "xero-ecr": {
-          "Type": "AWS::ECR::Repository",
-          "Properties": {
-            "RepositoryName": "xero-ecr"
-          }
-      }
-    }   
-  }
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  
+  "Description" : "AWS CloudFormation template for creating AWS ECR",
+  "Resources": {
+    "XeroECS": {
+        "Type": "AWS::ECR::Repository",
+        "Properties": {
+          "RepositoryName": "xero-ecr"
+        }
+    }
+  }   
+}

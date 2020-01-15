@@ -1,0 +1,347 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Metadata": {
+      "AWS::CloudFormation::Designer": {
+          "ad010270-ddd4-4d70-b058-bcf5a887af31": {
+              "size": {
+                  "width": 60,
+                  "height": 60
+              },
+              "position": {
+                  "x": 60,
+                  "y": 90
+              },
+              "z": 1,
+              "embeds": []
+          },
+          "a77a2e61-4d44-4201-8f95-834f2513b5f9": {
+              "size": {
+                  "width": 60,
+                  "height": 60
+              },
+              "position": {
+                  "x": 180,
+                  "y": 90
+              },
+              "z": 1,
+              "embeds": [],
+              "isassociatedwith": [
+                  "ad010270-ddd4-4d70-b058-bcf5a887af31"
+              ]
+          },
+          "4b134165-e891-47df-b2fc-dfc941a1f48b": {
+              "size": {
+                  "width": 60,
+                  "height": 60
+              },
+              "position": {
+                  "x": 60,
+                  "y": 210
+              },
+              "z": 1,
+              "embeds": []
+          },
+          "d5556c9d-efa9-4934-b890-aa235f96e31d": {
+              "size": {
+                  "width": 60,
+                  "height": 60
+              },
+              "position": {
+                  "x": 180,
+                  "y": 210
+              },
+              "z": 1,
+              "embeds": [],
+              "isassociatedwith": [
+                  "4b134165-e891-47df-b2fc-dfc941a1f48b"
+              ]
+          },
+          "a637572c-dcb2-497a-8687-1b89c48e878d": {
+              "size": {
+                  "width": 60,
+                  "height": 60
+              },
+              "position": {
+                  "x": 300,
+                  "y": 90
+              },
+              "z": 1,
+              "embeds": []
+          },
+          "ac6f1872-c465-4bb7-8809-eed5f75c67a6": {
+              "size": {
+                  "width": 60,
+                  "height": 60
+              },
+              "position": {
+                  "x": 300,
+                  "y": 210
+              },
+              "z": 1,
+              "embeds": [],
+              "dependson": [
+                  "a637572c-dcb2-497a-8687-1b89c48e878d"
+              ]
+          },
+          "45b38217-01fb-41ba-83a5-72c7682282ef": {
+              "size": {
+                  "width": 610,
+                  "height": 260
+              },
+              "position": {
+                  "x": -107,
+                  "y": 51
+              },
+              "z": 0
+          }
+      }
+  },
+  "Resources": {
+      "EcsCluster": {
+          "Type": "AWS::ECS::Cluster",
+          "DependsOn": [
+              "MyVPC"
+          ],
+          "Properties": {
+              "ClusterName": "xero-ecs-test-2"
+          },
+          "Metadata": {
+              "AWS::CloudFormation::Designer": {
+                  "id": "a637572c-dcb2-497a-8687-1b89c48e878d"
+              }
+          }
+      },
+      "EcsTaskDefinition": {
+          "Type": "AWS::ECS::TaskDefinition",
+          "DependsOn": [
+              "MyVPC",
+              "EcsCluster"
+          ],
+          "Properties": {
+              "ContainerDefinitions": [
+                  {
+                      "Name": "xero-app",
+                      "Cpu": "1",
+                      "Essential": "true",
+                      "Image": "182111317809.dkr.ecr.ap-southeast-2.amazonaws.com/xero-ecr:latest",
+                      "Memory": "20",
+                      "PortMappings": [
+                          {
+                              "HostPort": 80,
+                              "ContainerPort": 80
+                          }
+                      ]
+                  }
+              ]
+          },
+          "Metadata": {
+              "AWS::CloudFormation::Designer": {
+                  "id": "ac6f1872-c465-4bb7-8809-eed5f75c67a6"
+              }
+          }
+      },
+      "ECSAutoScalingGroup": {
+          "Type": "AWS::AutoScaling::AutoScalingGroup",
+          "DependsOn": [
+              "MyVPC"
+          ],
+          "Properties": {
+              "AvailabilityZones": [
+                  "ap-southeast-2a",
+                  "ap-southeast-2b"
+              ],
+              "LaunchConfigurationName": {
+                  "Ref": "ContainerInstances"
+              },
+              "MinSize": "1",
+              "MaxSize": "5",
+              "DesiredCapacity": "5"
+          },
+          "CreationPolicy": {
+              "ResourceSignal": {
+                  "Timeout": "PT15M"
+              }
+          },
+          "UpdatePolicy": {
+              "AutoScalingRollingUpdate": {
+                  "MinInstancesInService": "1",
+                  "MaxBatchSize": "1",
+                  "PauseTime": "PT15M",
+                  "WaitOnResourceSignals": "false"
+              }
+          },
+          "Metadata": {
+              "AWS::CloudFormation::Designer": {
+                  "id": "d5556c9d-efa9-4934-b890-aa235f96e31d"
+              }
+          }
+      },
+      "ContainerInstances": {
+          "Type": "AWS::AutoScaling::LaunchConfiguration",
+          "Properties": {
+              "ImageId": "ami-076331938ec2f113a",
+              "KeyName": "ssh-key-aus",
+              "InstanceType": "t2.medium"
+          },
+          "Metadata": {
+              "AWS::CloudFormation::Init": {
+                  "config": {
+                      "commands": {
+                          "01_add_instance_to_cluster": {
+                              "command": {
+                                  "Fn::Join": [
+                                      "",
+                                      [
+                                          "#!/bin/bash\n",
+                                          "echo ECS_CLUSTER=",
+                                          {
+                                              "Ref": "EcsCluster"
+                                          },
+                                          " >> /etc/ecs/ecs.config"
+                                      ]
+                                  ]
+                              }
+                          }
+                      },
+                      "files": {
+                          "/etc/cfn/cfn-hup.conf": {
+                              "content": {
+                                  "Fn::Join": [
+                                      "",
+                                      [
+                                          "[main]\n",
+                                          "stack=",
+                                          {
+                                              "Ref": "AWS::StackId"
+                                          },
+                                          "\n",
+                                          "region=",
+                                          {
+                                              "Ref": "AWS::Region"
+                                          },
+                                          "\n"
+                                      ]
+                                  ]
+                              },
+                              "mode": "000400",
+                              "owner": "root",
+                              "group": "root"
+                          },
+                          "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                              "content": {
+                                  "Fn::Join": [
+                                      "",
+                                      [
+                                          "[cfn-auto-reloader-hook]\n",
+                                          "triggers=post.update\n",
+                                          "path=Resources.ContainerInstances.Metadata.AWS::CloudFormation::Init\n",
+                                          "action=/opt/aws/bin/cfn-init -v ",
+                                          "         --stack ",
+                                          {
+                                              "Ref": "AWS::StackName"
+                                          },
+                                          "         --resource ContainerInstances ",
+                                          "         --region ",
+                                          {
+                                              "Ref": "AWS::Region"
+                                          },
+                                          "\n",
+                                          "runas=root\n"
+                                      ]
+                                  ]
+                              }
+                          }
+                      }
+                  }
+              },
+              "AWS::CloudFormation::Designer": {
+                  "id": "4b134165-e891-47df-b2fc-dfc941a1f48b"
+              }
+          }
+      },
+      "EC2InstanceProfile": {
+          "Type": "AWS::IAM::InstanceProfile",
+          "DependsOn": [
+              "MyVPC"
+          ],
+          "Properties": {
+              "Path": "/",
+              "Roles": [
+                  {
+                      "Ref": "EC2Role"
+                  }
+              ]
+          },
+          "Metadata": {
+              "AWS::CloudFormation::Designer": {
+                  "id": "a77a2e61-4d44-4201-8f95-834f2513b5f9"
+              }
+          }
+      },
+      "EC2Role": {
+          "Type": "AWS::IAM::Role",
+          "DependsOn": [
+              "MyVPC"
+          ],
+          "Properties": {
+              "AssumeRolePolicyDocument": {
+                  "Statement": [
+                      {
+                          "Effect": "Allow",
+                          "Principal": {
+                              "Service": [
+                                  "ec2.amazonaws.com"
+                              ]
+                          },
+                          "Action": [
+                              "sts:AssumeRole"
+                          ]
+                      }
+                  ]
+              },
+              "Path": "/",
+              "Policies": [
+                  {
+                      "PolicyName": "ecs-service",
+                      "PolicyDocument": {
+                          "Statement": [
+                              {
+                                  "Effect": "Allow",
+                                  "Action": [
+                                      "ecs:CreateCluster",
+                                      "ecs:RegisterContainerInstance",
+                                      "ecs:DeregisterContainerInstance",
+                                      "ecs:DiscoverPollEndpoint",
+                                      "ecs:Submit*",
+                                      "ecr:*",
+                                      "ecs:Poll"
+                                  ],
+                                  "Resource": "*"
+                              }
+                          ]
+                      }
+                  }
+              ]
+          },
+          "Metadata": {
+              "AWS::CloudFormation::Designer": {
+                  "id": "ad010270-ddd4-4d70-b058-bcf5a887af31"
+              }
+          }
+      },
+      "MyVPC": {
+          "Type": "AWS::EC2::VPC",
+          "Properties": {
+            "CidrBlock": "10.0.0.0/16",
+            "EnableDnsHostnames": true,
+            "EnableDnsSupport": true,
+            "InstanceTenancy": "dedicated"
+          },
+          "Metadata": {
+              "AWS::CloudFormation::Designer": {
+                  "id": "45b38217-01fb-41ba-83a5-72c7682282ef"
+              }
+          }
+      }
+  }
+}
